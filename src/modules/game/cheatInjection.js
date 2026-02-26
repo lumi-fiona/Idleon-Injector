@@ -14,6 +14,64 @@ const { objToString } = require("../utils/helpers");
 const { createLogger } = require("../utils/logger");
 
 const log = createLogger("Injection");
+const LUMI_DEBUG_MARKER = "[LUMI_ANVIL_DEBUG_JSON]";
+const LUMI_DEBUG_EXPORT_READY_MARKER = "[LUMI_ANVIL_DEBUG_EXPORT_READY]";
+const LUMI_DEBUG_FILE_PATH =
+    process.platform === "win32" ? "C:/temp/lumi_debug.txt" : getRuntimePath("logs", "lumi_debug.txt");
+let lumiDebugFileAnnounced = false;
+
+function getConsoleArgValue(arg) {
+    if (Object.prototype.hasOwnProperty.call(arg, "value")) return arg.value;
+    if (Object.prototype.hasOwnProperty.call(arg, "unserializableValue")) return arg.unserializableValue;
+    if (arg?.description) return arg.description;
+    return "";
+}
+
+async function appendLumiDebugLine(line) {
+    try {
+        if (process.platform === "win32") {
+            await fs.mkdir("C:/temp", { recursive: true });
+        } else {
+            await fs.mkdir(getRuntimePath("logs"), { recursive: true });
+        }
+
+        await fs.appendFile(LUMI_DEBUG_FILE_PATH, line + "\n", "utf8");
+
+        if (!lumiDebugFileAnnounced) {
+            lumiDebugFileAnnounced = true;
+            log.info(`LUMI debug log path: ${LUMI_DEBUG_FILE_PATH}`);
+        }
+    } catch (error) {
+        log.error("Failed writing LUMI debug file:", error.message);
+    }
+}
+
+async function handleLumiDebugConsole(args) {
+    if (!Array.isArray(args) || args.length === 0) return;
+
+    const first = String(args[0] ?? "");
+
+    if (first === LUMI_DEBUG_MARKER) {
+        const rawPayload = typeof args[1] === "string" ? args[1] : JSON.stringify(args[1]);
+        const timestamp = new Date().toISOString();
+
+        try {
+            const parsed = JSON.parse(rawPayload);
+            const line = `[${timestamp}] ${JSON.stringify(parsed)}`;
+            await appendLumiDebugLine(line);
+        } catch {
+            const line = `[${timestamp}] ${rawPayload}`;
+            await appendLumiDebugLine(line);
+        }
+        return;
+    }
+
+    if (first === LUMI_DEBUG_EXPORT_READY_MARKER) {
+        const timestamp = new Date().toISOString();
+        const line = `[${timestamp}] ${LUMI_DEBUG_EXPORT_READY_MARKER} ${JSON.stringify(args[1] ?? {})}`;
+        await appendLumiDebugLine(line);
+    }
+}
 
 /**
  * Set up CDP interception and inject cheats into the game
@@ -59,7 +117,11 @@ async function setupIntercept(hook, config, startupCheats, cheatConfig, cdpPort)
     await Page.setBypassCSP({ enabled: true });
 
     Runtime.consoleAPICalled((entry) => {
-        log.debug(entry.args.map((arg) => arg.value).join(" "));
+        const values = entry.args.map((arg) => getConsoleArgValue(arg));
+        log.debug(values.join(" "));
+        handleLumiDebugConsole(values).catch((error) => {
+            log.error("Failed handling LUMI debug console entry:", error.message);
+        });
     });
 
     await Promise.all([Runtime.enable(), Page.enable(), Network.enable(), DOM.enable()]);
