@@ -175,12 +175,7 @@ function setupEvents670Minigames() {
 
                     // Hide cover image
                     const coverImage = this._UIinventory15?.[COVER_IMG_ARRAY_ID]?.[COVER_IMG_ID];
-                    if (
-                        coverImage &&
-                        typeof coverImage.get_alpha === "function" &&
-                        typeof coverImage.set_alpha === "function" &&
-                        coverImage.get_alpha() > 0
-                    ) {
+                    if (coverImage?.get_alpha && coverImage.get_alpha() > 0) {
                         coverImage.set_alpha(0);
                     }
                 }
@@ -205,7 +200,7 @@ function setupEvents670Minigames() {
             if (cheatState.minigame.valentine && this._GenINFO?.[213] === 2) {
                 const grid = this._GenINFO[228];
                 const clicked = this._GenINFO[229];
-                const covers = this._UIinventory15?.[68];
+                const covers = this._UIinventory15[68];
 
                 if (grid && clicked && covers) {
                     for (let i = 0; i < 36; i++) {
@@ -213,19 +208,9 @@ function setupEvents670Minigames() {
                         if (grid[i] !== 0 || clicked[i] !== 0) continue;
 
                         const coverImg = covers[i];
-                        if (
-                            !coverImg ||
-                            typeof coverImg.get_transform !== "function" ||
-                            typeof coverImg.set_transform !== "function"
-                        ) {
-                            continue;
-                        }
 
                         const tform = coverImg.get_transform();
-                        if (!tform || typeof tform.get_colorTransform !== "function") continue;
-
                         const cform = tform.get_colorTransform();
-                        if (!cform || typeof tform.set_colorTransform !== "function") continue;
 
                         cform.redMultiplier = 0;
                         cform.blueMultiplier = 0;
@@ -248,24 +233,15 @@ function setupEvents670Minigames() {
         const data = instance._GenINFO?.[197];
         const matched = instance._GenINFO?.[198];
 
-        if (!cards || !data || !matched) return;
-
         for (let i = 0; i < 44; i++) {
             const img = cards[i + 44];
-            if (data[i] !== 0 && img && typeof img.set_scaleX === "function") {
+            if (data[i] !== 0) {
                 img.set_scaleX(1);
 
                 // tint matched pairs green
-                if (
-                    matched[i] === 1 &&
-                    typeof img.get_transform === "function" &&
-                    typeof img.set_transform === "function"
-                ) {
+                if (matched[i] === 1) {
                     const tform = img.get_transform();
-                    if (!tform || typeof tform.get_colorTransform !== "function") continue;
-
                     const cform = tform.get_colorTransform();
-                    if (!cform || typeof tform.set_colorTransform !== "function") continue;
 
                     cform.redMultiplier = 0;
                     cform.blueMultiplier = 0;
@@ -296,7 +272,6 @@ function setupEvents670Minigames() {
 // poing and log
 function setupEvents577Minigames() {
     const ActorEvents577 = events(577);
-    if (!ActorEvents577) return;
 
     // Poing: Hook into _event_Gaming where AI paddle movement happens
     // _GenINFO[58] is paddle positions array [playerX, aiX]
@@ -335,22 +310,14 @@ function setupEvents577Minigames() {
     if (!ActorEvents577.prototype._customEvent_W5stuffzz?._isPatched) {
         createMethodProxy(ActorEvents577.prototype, "_customEvent_W5stuffzz", function (base) {
             if (!cheatState.minigame.log) return base;
-            const cards = this?._UIinventory13?.[41];
-            const data = this?._GenINFO?.[54];
-
-            if (!cards || !data) return base;
+            const cards = this._UIinventory13[41];
+            const data = this._GenINFO[54];
 
             for (let i = 0; i < 10; i++) {
                 const img = cards[i];
-                if (!img || typeof img.get_transform !== "function" || typeof img.set_transform !== "function") {
-                    continue;
-                }
 
                 const tform = img.get_transform();
-                if (!tform || typeof tform.get_colorTransform !== "function") continue;
-
                 const cform = tform.get_colorTransform();
-                if (!cform || typeof tform.set_colorTransform !== "function") continue;
 
                 if (data[i] === 1) {
                     // skull — tint red
