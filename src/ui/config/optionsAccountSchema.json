@@ -2957,5 +2957,10 @@
         "description": "Toggles whether the AutoFullClearNECESSARY helper reports that an auto full clear is required",
         "type": "number",
         "AI": true
+    },
+    "602": {
+        "name": "6-Star Cardifiers",
+        "description": "Number of 6-star cardifiers",
+        "type": "number",
     }
 }
