@@ -2,6 +2,7 @@ import vanX from "../vendor/van-x-0.6.3.js";
 import * as API from "../services/api.js";
 import { VIEWS } from "./constants.js";
 import { getCheatConfigPath, configPathExists } from "../utils/index.js";
+import { formatDisplayValue, monitorIdFromMonitorPath } from "../components/views/search/valueUtils.js";
 import {
     initWebSocket,
     onStateUpdate,
@@ -357,10 +358,25 @@ const AccountService = {
     },
 };
 
+const SearchService = {
+    setGgaValue: async (path, value) => {
+        const ok = await API.gga(path, value);
+        if (!ok) {
+            throw new Error(`Write to ${path} failed verification`);
+        }
+        return {
+            success: true,
+            path,
+            type: value === null ? "object" : typeof value,
+            value,
+            formattedValue: formatDisplayValue(value),
+        };
+    },
+};
+
 const MonitorService = {
     subscribe: (path) => {
-        const id = path.replace(/[[\]]/g, "-").replace(/\./g, "-");
-        sendMonitorSubscribe(id, path);
+        sendMonitorSubscribe(monitorIdFromMonitorPath(path), path);
     },
     unsubscribe: (id) => {
         sendMonitorUnsubscribe(id);
@@ -393,6 +409,10 @@ const store = {
     saveConfig: ConfigService.saveConfig,
 
     loadAccountOptions: AccountService.loadAccountOptions,
+
+    fetchGgaKeys: API.fetchGgaKeys,
+    searchGga: API.searchGga,
+    setGgaValue: SearchService.setGgaValue,
 
     subscribeMonitor: MonitorService.subscribe,
     unsubscribeMonitor: MonitorService.unsubscribe,

@@ -139,7 +139,32 @@ export const blacklist_gga = new Set([
     // "MonsterDefinitionsGET",
     // "DialogueDefGET",
     "MapMonstersList",
+    // Engine scratch/placeholder attributes: hidden from key selection and
+    // searches because they hold transient render/combat junk, not save data.
     "dummyActor",
+    "DummyList",
+    "DummyList2",
+    "DummyList3",
+    "DummyListDMGpixel",
+    "DummyMap",
+    "DummyMap2",
+    "DummyNumber",
+    "DummyNumber2",
+    "DummyNumber3",
+    "DummyNumber4",
+    "DummyNumber5",
+    "DummyNumberSafe",
+    "DummyPixelType",
+    "DummyText",
+    "DummyText2",
+    "DummyText3",
+    "dummyCritDmgMulti",
+    "dummyDamageDealt",
+    "dummyDisplayEXPTYPE",
+    "dummyDisplayPopup",
+    "dummyMonsterID",
+    "dummyMonsterNODE",
+    "dummyMonsterTYPE",
 ]);
 
 // Known gem shop bundles: [displayName, bundleCode]
