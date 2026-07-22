@@ -5,12 +5,12 @@
  * - gembuylimit, mtx, post, guild, task, quest, star
  * - giant, gems, plunderous, candy, candytime, nodmg
  * - hidenames, noanim, bigmodel, eventitems, autoloot, perfectobols, autoparty
- * - arcade, eventspins, hoopshop, dartshop, guildpoints, cardcopy, cardpassive
+ * - arcade, eventspins, hoopshop, dartshop, guildpoints, cardcopy, cardpassive, autoboss
  */
 
 import { registerCheats } from "../core/registration.js";
 import { cheatState } from "../core/state.js";
-import { firebase, gga } from "../core/globals.js";
+import { behavior, firebase, gga } from "../core/globals.js";
 import { deepCopy } from "../utils/deepCopy.js";
 import { rollAllObols } from "../helpers/obolRolling.js";
 
@@ -43,6 +43,7 @@ registerCheats({
         { name: "eventspins", message: "Infinite event spins" },
         { name: "hoopshop", message: "hoopshop cost nullify" },
         { name: "dartshop", message: "dartshop cost nullify" },
+        { name: "autoboss", message: "automatically reload defeated boss maps" },
         {
             name: "guildpoints",
             message: "Adds guild points to the guild (max 1200 per week)",
@@ -86,3 +87,42 @@ registerCheats({
         { name: "cardpassive", message: "all cards always give bonus (passive)" },
     ],
 });
+
+const bossMaps = new Set([29, 66, 114, 165, 214, 266]);
+let autobossArmed = false;
+let autobossReload = null;
+let autobossMap = null;
+
+setInterval(() => {
+    if (!cheatState.wide.autoboss || !bossMaps.has(gga.CurrentMap)) {
+        autobossArmed = false;
+        clearTimeout(autobossReload);
+        autobossReload = null;
+        return;
+    }
+
+    if (gga.CurrentMap !== autobossMap) {
+        autobossMap = gga.CurrentMap;
+        autobossArmed = false;
+        clearTimeout(autobossReload);
+        autobossReload = null;
+    }
+
+    if (gga.BossHP > 0) {
+        autobossArmed = true;
+        return;
+    }
+
+    if (!autobossArmed || autobossReload) return;
+
+    autobossArmed = false;
+    autobossReload = setTimeout(() => {
+        autobossReload = null;
+        if (!cheatState.wide.autoboss || !bossMaps.has(gga.CurrentMap)) return;
+
+        autobossArmed = false;
+        const fadeOut = behavior.createFadeOut(0.4, 0);
+        const fadeIn = behavior.createFadeIn(0.5, 0);
+        behavior.reloadCurrentScene(fadeOut, fadeIn);
+    }, 5000);
+}, 1000);
